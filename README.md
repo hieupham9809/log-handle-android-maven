@@ -1,22 +1,30 @@
 # Hướng dẫn cài đặt và sử dụng tool Log Show Service
 ## Cài đặt
+Tại build.gradle của Project
+```
+      allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+```
+Tại build.gradle của app
+```
+      dependencies {
+	        implementation 'com.github.hieupham9809:log-handle-android-maven:1.0'
+	}
+```
 
-#### 1. Clone toàn bộ repository về, giải nén và đổi tên folder chứa src và các file liên quan thành "logshowjava"
-
-#### 2. Import dưới dạng module, chọn đường dẫn đến folder vừa rồi:
-![alt text](img_intro/5.png)
-
-#### 3. Vào gradle (Module:app) add dependency sau vào sau đó Sync lại project:
-
-![alt text](img_intro/6.png)
-
+Sau đó Sync lại project
 #### 4. Tại activity nào đó, truyền vào parser cho file log, tạo FloatingLogViewService, sau đó gọi hàm startSelf và truyền vào đường dẫn file log:
 (Lưu ý request quyền draw over app)
 
 ```java
-      FloatingLogViewService.setHtmlParserAdapter(new ZingTVHtmlParser());
+      HtmlIParser htmlIParser = new ZingTVHtmlParser();
+      FloatingLogViewService.setHtmlParserAdapter(htmlIParser);
       FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
-      floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/19-09-2019.html");
+      floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/31-10-2019.html");
 ```
 
 ## Sử dụng
