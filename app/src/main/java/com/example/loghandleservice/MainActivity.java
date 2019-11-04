@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
             FloatingLogViewService.setHtmlParserAdapter(htmlIParser);
             FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
-            floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/31-10-2019.html");
+            floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/04-11-2019.html");
 
         }
     }

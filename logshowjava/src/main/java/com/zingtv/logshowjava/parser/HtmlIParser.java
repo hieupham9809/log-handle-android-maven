@@ -1,5 +1,7 @@
 package com.zingtv.logshowjava.parser;
 
+import android.text.Spanned;
+
 public interface HtmlIParser {
-    String read(String raw);
+    Spanned read(String raw, String filterString, String priority);
 }

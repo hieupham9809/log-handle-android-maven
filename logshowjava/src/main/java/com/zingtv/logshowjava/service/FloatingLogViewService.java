@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.FileObserver;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -161,12 +163,12 @@ public class FloatingLogViewService extends Service {
         super.onCreate();
 
         priorityHM = new HashMap<>();
-        priorityHM.put("Verbose", "priority=\"2\"");
-        priorityHM.put("Debug", "priority=\"3\"");
-        priorityHM.put("Info", "priority=\"4\"");
-        priorityHM.put("Warn", "priority=\"5\"");
-        priorityHM.put("Error", "priority=\"6\"");
-        priorityHM.put("Assert", "priority=\"7\"");
+        priorityHM.put("Verbose", "2");
+        priorityHM.put("Debug", "3");
+        priorityHM.put("Info", "4");
+        priorityHM.put("Warn", "5");
+        priorityHM.put("Error", "6");
+        priorityHM.put("Assert", "7");
 
         //Inflate the floating view layout we created
 
@@ -398,6 +400,7 @@ public class FloatingLogViewService extends Service {
                                 expandedView.setVisibility(View.VISIBLE);
 
                                 logTextView = mFloatingView.findViewById(R.id.tv);
+                                logTextView.setTextColor(Color.WHITE);
                                 scrollView = mFloatingView.findViewById(R.id.scroll_view);
                                 tvWrapper = mFloatingView.findViewById(R.id.tv_wrapper);
 
@@ -443,48 +446,114 @@ public class FloatingLogViewService extends Service {
         }
     }
 
-    public void loadLogToWindow() {
+    class LoadLogAsyncTask extends AsyncTask<String, Integer, Spanned> {
 
-        FileInputStream fis;
-        String content = "";
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
 
-        try {
-            fis = new FileInputStream(new File(path));
-
-            int size = fis.available();
-
-            byte[] buffer = new byte[size];
-            while (fis.read(buffer) != -1) {
-            }
-            content += new String(buffer);
+        @Override
+        protected Spanned doInBackground(String... value) {
+            FileInputStream fis;
+            String content = "";
             Spanned spannedContent;
-            if (htmlParser != null) {
-                content = htmlParser.read(content);
-                spannedContent = filterLog(content, filterEditText.getText().toString().trim());
 
-            } else {
-                Log.d("ZINGLOGSHOW", "html Parser null");
+            try {
+                Log.i("FLoatingLogView", "doInBackground: " + Thread.currentThread().toString());
+                Log.d("ZINGLOGSHOW", "value 0 "+ value[0]);
+                fis = new FileInputStream(new File(value[0]));
 
-                throw new Exception("Need to implement and set HTML Parser");
-            }
-            logTextView.setText(spannedContent);
+                int size = fis.available();
 
-            scrollView.post(new Runnable() {
-                @Override
-                public void run() {
-                    scrollView.fullScroll(View.FOCUS_DOWN);
-                    tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+                byte[] buffer = new byte[size];
+                while (fis.read(buffer) != -1) {
 
                 }
-            });
+                content += new String(buffer);
+                if (htmlParser != null) {
+                    spannedContent = htmlParser.read(content, value[1],value[2]);
+//                    spannedContent = filterLog(content, value[1],value[2]);
+//                    filterEditText.getText().toString().trim()
+//                    priorityHM.get(prioritySpinner.getSelectedItem().toString())
+                } else {
+                    Log.d("ZINGLOGSHOW", "html Parser null");
+
+                    throw new Exception("Need to implement and set HTML Parser");
+                }
+//                logTextView.setText(spannedContent);
+                return spannedContent;
 
 
-        } catch (Exception e) {
-            Log.d("ZINGLOGSHOW", "error reading file " + e.getMessage());
+
+
+            } catch (Exception e) {
+                Log.d("ZINGLOGSHOW", "error reading file " + e.getMessage());
+                return null;
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(Spanned result){
+            Log.i("FLoatingLogView", "onPostExecute: \n" + result);
+            logTextView.setText(result.toString());
+            scrollView.fullScroll(View.FOCUS_DOWN);
+            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+//            scrollView.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    scrollView.fullScroll(View.FOCUS_DOWN);
+//                    tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+//
+//                }
+//            });
+
         }
     }
+    public void loadLogToWindow() {
+        Log.i("FLoatingLogView", Thread.currentThread().toString());
+        new LoadLogAsyncTask().execute(path,filterEditText.getText().toString().trim(),priorityHM.get(prioritySpinner.getSelectedItem().toString()));
+//        FileInputStream fis;
+//        String content = "";
+//
+//        try {
+//            fis = new FileInputStream(new File(path));
+//
+//            int size = fis.available();
+//
+//            byte[] buffer = new byte[size];
+//            while (fis.read(buffer) != -1) {
+//            }
+//            content += new String(buffer);
+//            Spanned spannedContent;
+//            if (htmlParser != null) {
+//                content = htmlParser.read(content);
+//                spannedContent = filterLog(content, filterEditText.getText().toString().trim());
+//
+//            } else {
+//                Log.d("ZINGLOGSHOW", "html Parser null");
+//
+//                throw new Exception("Need to implement and set HTML Parser");
+//            }
+//            logTextView.setText(spannedContent);
+//
+//            scrollView.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    scrollView.fullScroll(View.FOCUS_DOWN);
+//                    tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+//
+//                }
+//            });
+//
+//
+//        } catch (Exception e) {
+//            Log.d("ZINGLOGSHOW", "error reading file " + e.getMessage());
+//        }
+    }
 
-    private Spanned filterLog(String rawLog, String filterString) {
+    private synchronized Spanned filterLog(String rawLog, String filterString, String priority) {
         Spannable outputSpanned;
         String content = rawLog;
 
@@ -495,7 +564,7 @@ public class FloatingLogViewService extends Service {
         if (filterString.length() > 0) {
 
             for (int i = 0; i < splitLog.length; i++) {
-                if (splitLog[i].contains(priorityHM.get(prioritySpinner.getSelectedItem().toString()))
+                if (splitLog[i].contains(priority)
                         && splitLog[i].contains(filterString)) {
                     logAfterFilter.append(splitLog[i]).append("</p>");
                 }
@@ -505,7 +574,7 @@ public class FloatingLogViewService extends Service {
         } else {
 
             for (int i = 0; i < splitLog.length; i++) {
-                if (splitLog[i].contains(priorityHM.get(prioritySpinner.getSelectedItem().toString()))) {
+                if (splitLog[i].contains(priority)) {
                     logAfterFilter.append(splitLog[i]).append("</p>");
                 }
             }
@@ -513,7 +582,10 @@ public class FloatingLogViewService extends Service {
         content = logAfterFilter.toString();
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            outputSpanned = new SpannableString(Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY));
+//            Spanned spanned = Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY);
+            SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(content);
+            outputSpanned = new SpannableString(spannableStringBuilder);
+
         } else {
             outputSpanned = new SpannableString(Html.fromHtml(content));
         }
