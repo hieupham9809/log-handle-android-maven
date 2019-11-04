@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.WebviewFragment">
+
+
+
+    <com.zingtv.logshowjava.view.DragLayout
+        android:id="@+id/drag_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#00000000">
+
+        <LinearLayout
+            android:id="@+id/main_view"
+            android:layout_width="200dp"
+            android:layout_height="250dp"
+            android:gravity="bottom"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:background="@color/colorPrimaryDark"
+            android:orientation="vertical">
+            <Button
+                android:id="@+id/load_btn"
+                android:layout_width="30dp"
+                android:layout_height="30dp" />
+
+
+        </LinearLayout>
+        <View
+            android:id="@+id/scale_zone"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="right"
+
+
+            android:background="@color/colorPrimary"></View>
+
+        <CustomWebView
+            android:id="@+id/webview"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:focusableInTouchMode="true"></CustomWebView>
+
+    </com.zingtv.logshowjava.view.DragLayout>
+
+</FrameLayout>

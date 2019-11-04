@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--<FrameLayout-->
+    <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--xmlns:tools="http://schemas.android.com/tools"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent">-->
+
+<RelativeLayout android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:focusable= "false"
+    android:enabled="false"
+    >
+        <RelativeLayout
+            android:id="@+id/collapse_view"
+            android:layout_width="wrap_content"
+            android:visibility="visible"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:alpha="0.6"
+
+            android:background="@drawable/round_background"
+            >
+
+            <!--Icon of floating widget -->
+            <ImageView
+                android:id="@+id/collapsed_iv"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/logicon"
+                />
+
+            <!--Close button-->
+            <ImageView
+                android:id="@+id/close_btn"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginLeft="40dp"
+                android:src="@drawable/ic_close"
+                />
+
+        </RelativeLayout>
+
+        <com.zingtv.logshowjava.view.DragLayout
+            android:id="@+id/drag_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+
+            <LinearLayout
+                android:id="@+id/main_view"
+                android:layout_width="400dp"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+
+                android:background="#403EC8C8"
+                android:orientation="horizontal"
+                android:weightSum="1">
+                <ImageButton
+                    android:id="@+id/load_btn"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="5dp"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"
+                    android:layout_weight="0.02"
+                    android:background="#00000000"
+
+
+                    />
+
+                <ImageView
+                    android:id="@+id/close_button_at_drag"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="8dp"
+                    android:layout_weight="0.02"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"
+
+                    android:src="@drawable/ic_close" />
+
+                <EditText
+                    android:id="@+id/search_et"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.3"
+                    android:focusable="true"
+                    android:inputType="textMultiLine"
+                    android:scrollHorizontally="false"
+
+
+                    android:focusableInTouchMode="true" />
+                <TextView
+                    android:id="@+id/priority_tv"
+                    android:layout_width="45dp"
+                    android:textSize="15sp"
+                    android:text="demo"
+                    android:gravity="bottom"
+                    android:layout_height="match_parent"
+                    android:adjustViewBounds="true"
+                    android:paddingBottom="5dp"
+                    />
+                <Spinner
+                    android:id="@+id/priority_spinner"
+                    android:layout_width="30dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="bottom"
+                    android:spinnerMode="dropdown"
+                    android:focusable="true"
+                    android:scaleType="fitCenter"
+                    >
+                </Spinner>
+
+
+            </LinearLayout>
+            <ImageView
+                android:id="@+id/scale_zone"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:padding="3dp"
+                android:layout_gravity="right"
+                android:src="@drawable/resize"
+                android:background="#403EC8C8"
+
+                ></ImageView>
+
+
+            <ScrollView
+                android:id="@+id/scroll_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#000000"
+
+                >
+                <LinearLayout
+                    android:id="@+id/tv_wrapper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:descendantFocusability="blocksDescendants"
+                    >
+                    <TextView
+                        android:id="@+id/tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:focusableInTouchMode="true"
+                        />
+                </LinearLayout>
+
+            </ScrollView>
+
+            <!--<WebView-->
+                <!--android:id="@+id/webview"-->
+                <!--android:layout_width="200dp"-->
+                <!--android:layout_height="200dp"-->
+                <!--&gt;</WebView>-->
+
+        </com.zingtv.logshowjava.view.DragLayout>
+
+
+    </RelativeLayout>
+<!--</FrameLayout>-->
