@@ -1,4 +1,4 @@
-# Hướng dẫn cài đặt và sử dụng tool Log Show Service
+# Hướng dẫn cài đặt và sử dụng tool Log Handle Service
 ## Cài đặt
 Tại build.gradle của Project
 ```
