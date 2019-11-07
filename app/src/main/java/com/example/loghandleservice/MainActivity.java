@@ -13,20 +13,30 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.zingtv.logshowjava.parser.HtmlIParser;
 import com.zingtv.logshowjava.parser.ZingTVHtmlParser;
 import com.zingtv.logshowjava.service.FloatingLogViewService;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static com.zingtv.logshowjava.logconstant.LogConstant.CODE_DRAW_OVER_OTHER_APP_PERMISSION;
 import static com.zingtv.logshowjava.logconstant.LogConstant.REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION;
 
 public class MainActivity extends AppCompatActivity {
+    Button button;
+    int counter = 0;
+
     String[] appPermissions = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
@@ -90,6 +100,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        button = findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                        Timber.e("Log time %d", counter);
+                String logTimeStamp = new SimpleDateFormat("E MMM dd yyyy 'at' hh:mm:ss:SSS aaa",
+                        Locale.getDefault()).format(new Date());
+                String tag = "TEST";
+                String message = "test"+counter;
+                try {
+                    FileWriter writer = new FileWriter("/storage/emulated/0/Download/04-11-2019.html", true);
+                    writer.append("<p priority=\"").append(String.valueOf(2))
+                            .append("\" style=\"background:lightgray;\"><strong ").append("style=\"background:lightblue;\">&nbsp&nbsp")
+                            .append(logTimeStamp)
+                            .append(" :&nbsp&nbsp</strong><strong>&nbsp&nbsp")
+                            .append(tag)
+                            .append("</strong> - ")
+                            .append(message)
+                            .append("</p>");
+                    writer.flush();
+                    writer.close();
+                    counter++;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                counter++;
+            }
+        });
 
         if (checkAndRequestPermissions()) {
             initApp();

@@ -95,7 +95,7 @@
                     android:focusableInTouchMode="true" />
                 <TextView
                     android:id="@+id/priority_tv"
-                    android:layout_width="45dp"
+                    android:layout_width="50dp"
                     android:textSize="15sp"
                     android:text="demo"
                     android:gravity="bottom"
@@ -128,29 +128,37 @@
                 ></ImageView>
 
 
-            <ScrollView
-                android:id="@+id/scroll_view"
+            <!--<ScrollView-->
+                <!--android:id="@+id/scroll_view"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:background="#000000"-->
+
+                <!--&gt;-->
+                <!--<LinearLayout-->
+                    <!--android:id="@+id/tv_wrapper"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:orientation="vertical"-->
+                    <!--android:descendantFocusability="blocksDescendants"-->
+                    <!--&gt;-->
+                    <!--<TextView-->
+                        <!--android:id="@+id/tv"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:focusableInTouchMode="true"-->
+                        <!--/>-->
+                <!--</LinearLayout>-->
+
+            <!--</ScrollView>-->
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerview_log"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="#000000"
+                android:scrollbars="vertical"
+                android:background="#000000">
 
-                >
-                <LinearLayout
-                    android:id="@+id/tv_wrapper"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:descendantFocusability="blocksDescendants"
-                    >
-                    <TextView
-                        android:id="@+id/tv"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:focusableInTouchMode="true"
-                        />
-                </LinearLayout>
-
-            </ScrollView>
+            </android.support.v7.widget.RecyclerView>
 
             <!--<WebView-->
                 <!--android:id="@+id/webview"-->

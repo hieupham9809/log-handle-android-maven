@@ -2,6 +2,7 @@ package com.zingtv.logshowjava.view;
 
 import android.content.Context;
 
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 
 import android.view.MotionEvent;
@@ -19,10 +20,11 @@ import com.zingtv.logshowjava.R;
 
 public class DragLayout extends RelativeLayout {
     private LinearLayout mainView;
-    private LinearLayout tvWrapper;
-    private TextView tv;
+//    private LinearLayout tvWrapper;
+//    private TextView logItemTv;
     private TextView modeTv;
-    private ScrollView scrollView;
+//    private ScrollView scrollView;
+    private RecyclerView recyclerView;
     private View scaleZone;
 
     private Context context;
@@ -60,31 +62,14 @@ public class DragLayout extends RelativeLayout {
 
         mainView = findViewById(R.id.main_view);
         scaleZone = findViewById(R.id.scale_zone);
-        scrollView = findViewById(R.id.scroll_view);
-        tvWrapper = findViewById(R.id.tv_wrapper);
+        recyclerView = findViewById(R.id.recyclerview_log);
+//        scrollView = findViewById(R.id.scroll_view);
+//        tvWrapper = findViewById(R.id.tv_wrapper);
         modeTv = findViewById(R.id.priority_tv);
-        tv = findViewById(R.id.tv);
-        tv.setTextIsSelectable(true);
-        tv.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                int startIndex = tv.getSelectionStart();
-                int endIndex = tv.getSelectionEnd();
-                if (startIndex > 0 && endIndex > 0) {
-                    String copyText = tv.getText().toString().substring(startIndex, endIndex);
-                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", copyText);
-                    clipboard.setPrimaryClip(clip);
-                    Toast.makeText(context, "Copied " + copyText, Toast.LENGTH_SHORT).show();
+//        logItemTv = findViewById(R.id.log_item_tv);
+//        tv = findViewById(R.id.tv);
+//        tv.setTextIsSelectable(true);
 
-                } else {
-                    Toast.makeText(context, "Please select again", Toast.LENGTH_SHORT).show();
-
-                }
-
-                return true;
-            }
-        });
 
 
     }
@@ -144,18 +129,18 @@ public class DragLayout extends RelativeLayout {
         if (isViewHit(scaleZone, (int) ev.getX(), (int) ev.getY())) {
 
             isScaling = true;
-            if (scrollView.getScrollY() != 0) {
-                currentScroll = scrollView.getScrollY();
-            }
+//            if (scrollView.getScrollY() != 0) {
+//                currentScroll = scrollView.getScrollY();
+//            }
 
-            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+//            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
 
         }
 
 
         if (ev.getAction() == MotionEvent.ACTION_UP && isScaling) {
             isScaling = false;
-            scrollView.scrollTo(0, currentScroll);
+//            scrollView.scrollTo(0, currentScroll);
 
         }
         if (isScaling) {
@@ -186,7 +171,7 @@ public class DragLayout extends RelativeLayout {
         }
 
 
-        return isViewHit(scrollView, (int) ev.getX(), (int) ev.getY());
+        return isViewHit(recyclerView, (int) ev.getX(), (int) ev.getY());
     }
 
     @Override
@@ -198,12 +183,12 @@ public class DragLayout extends RelativeLayout {
             return false;
         }
 
-        if (isViewHit(scaleZone, (int) ev.getX(), (int) ev.getY())) {
-            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-
-        } else {
-            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-        }
+//        if (isViewHit(scaleZone, (int) ev.getX(), (int) ev.getY())) {
+//            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+//
+//        } else {
+//            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+//        }
         if (isViewHit(mainView, (int) ev.getX(), (int) ev.getY()) || isViewHit(modeTv, (int) ev.getX(), (int) ev.getY())) {
             return mDragHelper.shouldInterceptTouchEvent(ev);
         } else {
@@ -226,7 +211,7 @@ public class DragLayout extends RelativeLayout {
             );
 
 
-            scrollView.layout(
+            recyclerView.layout(
                     mainView.getLeft(),
                     mainView.getBottom(),
                     mainView.getRight() + 100,
@@ -243,7 +228,7 @@ public class DragLayout extends RelativeLayout {
                     right - 100,
                     top + 100
             );
-            scrollView.layout(
+            recyclerView.layout(
                     mainView.getLeft(),
                     mainView.getBottom(),
                     right,
@@ -254,7 +239,7 @@ public class DragLayout extends RelativeLayout {
         }
 
 
-        scrollView.layout(
+        recyclerView.layout(
                 mainView.getLeft(),
                 mainView.getBottom(),
                 right,

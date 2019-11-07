@@ -6,11 +6,14 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,15 +21,16 @@ import static android.graphics.Typeface.BOLD;
 
 public class ZingTVHtmlParser implements HtmlIParser {
     @Override
-    public synchronized Spanned read(String raw, String filterString, String filterPriority) {
+    public synchronized List<Spanned> read(String raw, String filterString, String filterPriority) {
         String[] listPtag = raw.split("</p>");
+        List<Spanned> spannedList = new ArrayList<>();
 //        String newP="";
         String priority = "";
         String textColor;
         int currentIndex = 0;
         int startIndex = 0;
 //        Spannable outputSpanned;
-        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
+//        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
         if (filterString.length() > 0) {
             for (int i = 0; i < listPtag.length; i++) {
 //                newP = "<p ";
@@ -55,26 +59,47 @@ public class ZingTVHtmlParser implements HtmlIParser {
                 }
 //                newP += "<font color=\"" + textColor + "\">";
 
-                priorityPattern = Pattern.compile("(<strong(.+)\">)(.*)(</strong><strong>)(.*)(</strong>)");
+                priorityPattern = Pattern.compile("(<strong(.+)\">)(.*)(</strong><strong>)(.*)(</strong>)(.*)");
                 matcher = priorityPattern.matcher(listPtag[i]);
                 if (matcher.find()) {
 
 //                    newP += "<small>" + matcher.group(3).replace("&nbsp&nbsp", " &nbsp ")
 //                            + "</small><" + matcher.group(5).replace("&nbsp&nbsp", " &nbsp ");
 
-                    if (priority.equals(filterPriority) && matcher.group(5).contains(filterString)){
+//                    Log.d("ZINGLOGSHOW", "read file " + " filter " + filterString);
+
+                    if (priority.equals(filterPriority) && matcher.group(7).contains(filterString)){
+
+                        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
+
                         String time = matcher.group(3).replace("&nbsp&nbsp", " ");
-                        String content = matcher.group(5).replace("&nbsp&nbsp", " ");
-
-
+                        String tag = matcher.group(5).replace("&nbsp&nbsp", " ");
+                        String content = matcher.group(7)+"\n";
+//                        Log.i("FLoatingLogView", "current index = "+ currentIndex );
 
                         spannableStringBuilder.append(time);
                         spannableStringBuilder.setSpan(new RelativeSizeSpan(0.7f),currentIndex, currentIndex + time.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         currentIndex += time.length();
+
+                        spannableStringBuilder.append(tag);
+                        spannableStringBuilder.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),currentIndex, currentIndex + tag.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        currentIndex += tag.length();
+
                         spannableStringBuilder.append(content);
-                        spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.parseColor(textColor)),startIndex, currentIndex + content.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        currentIndex += content.length();
-                        startIndex = currentIndex;
+                        spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.parseColor(textColor)),0, currentIndex + content.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                        currentIndex = 0;
+                        spannedList.add(spannableStringBuilder);
+
+                        int index = TextUtils.indexOf(spannableStringBuilder, filterString);
+
+
+                        while (index >= 0) {
+                            spannableStringBuilder.setSpan(new BackgroundColorSpan(Color.parseColor("#9dd6f9")), index, index
+                                    + filterString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            index = TextUtils.indexOf(spannableStringBuilder, filterString, index + filterString.length());
+                        }
+//                        startIndex = currentIndex;
                     } else {
                         continue;
                     }
@@ -112,7 +137,7 @@ public class ZingTVHtmlParser implements HtmlIParser {
                         textColor = "#B7950B";
                         break;
                     default:
-                        textColor = "#B7950B";
+                        textColor = "#FFFFFF";
                         break;
                 }
 //                newP += "<font color=\"" + textColor + "\">";
@@ -126,13 +151,15 @@ public class ZingTVHtmlParser implements HtmlIParser {
 //                            + "</small><" + matcher.group(5).replace("&nbsp&nbsp", " &nbsp ");
 
                     if (priority.equals(filterPriority)){
+                        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
+
                         String time = matcher.group(3).replace("&nbsp&nbsp", " ");
                         String tag = matcher.group(5).replace("&nbsp&nbsp", " ");
                         String content = matcher.group(7)+"\n";
-                        Log.i("FLoatingLogView", "current index = "+ currentIndex );
+//                        Log.i("FLoatingLogView", "current index = "+ currentIndex );
 
                         spannableStringBuilder.append(time);
-                        spannableStringBuilder.setSpan(new RelativeSizeSpan(0.4f),currentIndex, currentIndex + time.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        spannableStringBuilder.setSpan(new RelativeSizeSpan(0.7f),currentIndex, currentIndex + time.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         currentIndex += time.length();
 
                         spannableStringBuilder.append(tag);
@@ -140,10 +167,12 @@ public class ZingTVHtmlParser implements HtmlIParser {
                         currentIndex += tag.length();
 
                         spannableStringBuilder.append(content);
-                        spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.parseColor(textColor)),startIndex, currentIndex + content.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.parseColor(textColor)),0, currentIndex + content.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                        currentIndex += content.length();
-                        startIndex = currentIndex;
+                        currentIndex = 0;
+                        spannedList.add(spannableStringBuilder);
+
+//                        startIndex = currentIndex;
                     } else {
                         continue;
                     }
@@ -162,6 +191,6 @@ public class ZingTVHtmlParser implements HtmlIParser {
         }
 
 //        return TextUtils.join("</p>", listPtag);
-            return new SpannableString(spannableStringBuilder);
+            return spannedList;
     }
 }
