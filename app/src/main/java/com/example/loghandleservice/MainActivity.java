@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
             FloatingLogViewService.setHtmlParserAdapter(htmlIParser);
             FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
-            floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/04-11-2019.html");
+            floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/19-09-2019.html");
 
         }
     }
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 String tag = "TEST";
                 String message = "test"+counter;
                 try {
-                    FileWriter writer = new FileWriter("/storage/emulated/0/Download/04-11-2019.html", true);
+                    FileWriter writer = new FileWriter("/storage/emulated/0/Download/19-09-2019.html", true);
                     writer.append("<p priority=\"").append(String.valueOf(2))
                             .append("\" style=\"background:lightgray;\"><strong ").append("style=\"background:lightblue;\">&nbsp&nbsp")
                             .append(logTimeStamp)

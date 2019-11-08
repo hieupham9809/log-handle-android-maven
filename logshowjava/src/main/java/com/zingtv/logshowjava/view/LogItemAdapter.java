@@ -36,6 +36,7 @@ public class LogItemAdapter extends RecyclerView.Adapter<LogItemAdapter.LogViewH
     public LogItemAdapter(List<Spanned> myDataset, Context context) {
         mContext = context;
         mDataset = myDataset;
+
     }
     public LogItemAdapter(Context context) {
         mContext = context;
@@ -43,6 +44,9 @@ public class LogItemAdapter extends RecyclerView.Adapter<LogItemAdapter.LogViewH
     }
     public void setLog(List<Spanned> spannedList){
         mDataset = spannedList;
+    }
+    public void insertLog(List<Spanned> spannedList){
+        mDataset.addAll(0, spannedList);
     }
     // Create new views (invoked by the layout manager)
     @Override
