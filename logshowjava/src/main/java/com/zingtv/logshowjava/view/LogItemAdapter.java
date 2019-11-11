@@ -67,6 +67,9 @@ public class LogItemAdapter extends RecyclerView.Adapter<LogItemAdapter.LogViewH
         // - replace the contents of the view with that element
         if (mDataset != null) {
             holder.textView.setText(mDataset.get(position));
+            holder.textView.setTextIsSelectable(false);
+            holder.textView.measure(-1, -1);//you can specific other values.
+            holder.textView.setTextIsSelectable(true);
             holder.textView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
