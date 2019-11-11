@@ -80,7 +80,9 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
         if (totalItemCount < previousTotalItemCount) {
             //this.currentPage = this.startingPageIndex;
             this.previousTotalItemCount = totalItemCount;
+            this.loading = false;
             if (totalItemCount == 0) {
+
                 this.loading = true;
             }
         }
@@ -88,9 +90,8 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
         // changed, if so we conclude it has finished loading and update the current page
         // number and total item count.
         if (loading && (totalItemCount > previousTotalItemCount)) {
-            //Log.d("ZingDemoApi", "total item count: " + totalItemCount);
-            //Log.d("ZingDemoApi", "previous total item count: " + previousTotalItemCount);
             loading = false;
+
             previousTotalItemCount = totalItemCount;
         }
 
@@ -101,6 +102,8 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
 //        Log.d("ZINGLOGSHOW", "firstVisibleItem: "+ firstVisibleItem + " "
 //                                        +"totalItemCount: "+ totalItemCount + " "
 //                                        +"visibleItemCount: "+ visibleItemCount + " "
+//                                        +"previousItemCount: "+ previousTotalItemCount + " "
+//
 //        );
 
         if (!loading && (firstVisibleItem - visibleItemCount) <= 0) {

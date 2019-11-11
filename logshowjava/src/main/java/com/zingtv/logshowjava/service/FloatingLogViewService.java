@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -94,8 +95,11 @@ public class FloatingLogViewService extends Service {
     private int old_x = 0;
     private int old_y = 0;
 
+    private int sum = 0;
+
     private FileObserver fileObserver;
     private String content = "";
+    private String[] listPTag;
 
 
     private boolean isWatching = true;
@@ -106,7 +110,7 @@ public class FloatingLogViewService extends Service {
 
     private final long DELAY_FILTER = 1000;
 
-    private int currentFileIndex = 0;
+    private int currentFileIndex = -1;
 
     public FloatingLogViewService() {
     }
@@ -495,7 +499,7 @@ public class FloatingLogViewService extends Service {
             FileInputStream fis;
 //            String content = "";
 //            Spanned spannedContent;
-            List<Spanned> spannedList;
+            List<Spanned> spannedList = new ArrayList<>();
 
             try {
                 Log.i("FLoatingLogView", "doInBackground: " + Thread.currentThread().toString());
@@ -510,27 +514,33 @@ public class FloatingLogViewService extends Service {
                     while (fis.read(buffer) != -1) {
 
                     }
-                    content = new String(buffer);
-                }
-                Log.d("ZINGLOGSHOW", "content length: " + content.length());
-                if (currentFileIndex == 0){
-                    currentFileIndex = content.length();
-                    Log.d("ZINGLOGSHOW", "reset currentFileIndex");
+                    listPTag = new String(buffer).split("</p>");
+                    Log.d("ZINGLOGSHOW", "listPTag size "+ listPTag.length);
+
+                    currentFileIndex = listPTag.length;
+                    Log.d("ZINGLOGSHOW", "reset currentFileIndex = " + currentFileIndex);
 
                 }
+//                if (currentFileIndex == -1){
+//
+//
+//                }
                 if (htmlParser != null) {
-                    if (currentFileIndex - BUFFER_SIZE < 0){
-                        spannedList = htmlParser.read(content.substring(0, currentFileIndex), value[1],value[2]);
-                        Log.d("ZINGLOGSHOW", "reach top of file");
+                    while (currentFileIndex > 0 && spannedList.size() == 0)
+                    {
+                        if (currentFileIndex - BUFFER_SIZE < 0) {
+//                            spannedList = htmlParser.read(content.substring(0, currentFileIndex), value[1], value[2]);
+                            spannedList = htmlParser.read(TextUtils.join("</p>", Arrays.copyOfRange(listPTag, 0, currentFileIndex)), value[1], value[2]);
+                            currentFileIndex = -1;
+                            Log.d("ZINGLOGSHOW", "reach top of file");
 
-                    } else {
-                        do {
-                            spannedList = htmlParser.read(content.substring(currentFileIndex - BUFFER_SIZE, currentFileIndex), value[1], value[2]);
+                        } else {
+//                            spannedList = htmlParser.read(content.substring(currentFileIndex - BUFFER_SIZE, currentFileIndex), value[1], value[2]);
+                            spannedList = htmlParser.read(TextUtils.join("</p>", Arrays.copyOfRange(listPTag, currentFileIndex - BUFFER_SIZE, currentFileIndex)), value[1], value[2]);
                             currentFileIndex -= BUFFER_SIZE;
                             Log.d("ZINGLOGSHOW", "load more");
-                        } while (
-                            spannedList.size() == 0
-                        );
+
+                        }
 
                     }
 //                    spannedContent = filterLog(content, value[1],value[2]);
@@ -542,6 +552,9 @@ public class FloatingLogViewService extends Service {
                     throw new Exception("Need to implement and set HTML Parser");
                 }
 //                logTextView.setText(spannedContent);
+                sum+=spannedList.size();
+                Log.d("ZINGLOGSHOW", "number tag filtered " + sum);
+
                 return spannedList;
 
 
@@ -561,34 +574,27 @@ public class FloatingLogViewService extends Service {
             // specify an adapter (see also next example)
 
 
-            if (isScrollToEnd) {
-                mAdapter.setLog(result);
-                mAdapter.notifyDataSetChanged();
-                recyclerView.scrollToPosition(result.size() - 1);
-            } else {
-                Log.d("FLoatingLogView", "result length " + result.size() );
+            if (result != null) {
+                if (isScrollToEnd) {
+                    mAdapter.setLog(result);
+                    mAdapter.notifyDataSetChanged();
+
+                    recyclerView.scrollToPosition(result.size() - 1);
+                } else {
+//                    Log.d("ZINGLOGSHOW", "result length " + result.size());
 //                if (result.size() == 0 && currentFileIndex - BUFFER_SIZE < 0){
 //                    loadLogToWindow("false");
 //                }
-                mAdapter.insertLog(result);
-                mAdapter.notifyItemRangeInserted(0, result.size());
+                    mAdapter.insertLog(result);
+                    mAdapter.notifyItemRangeInserted(0, result.size());
+                }
             }
-//            logTextView.getEditableText().insert(0, result.toString());
-//            scrollView.fullScroll(View.FOCUS_DOWN);
-//            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-//            scrollView.post(new Runnable() {
-//                @Override
-//                public void run() {
-//                    scrollView.fullScroll(View.FOCUS_DOWN);
-//                    tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-//
-//                }
-//            });
+
 
         }
     }
     public void loadLogToWindow(String isLoadFileChange) {
-        Log.i("FLoatingLogView", Thread.currentThread().toString());
+//        Log.i("FLoatingLogView", Thread.currentThread().toString());
         new LoadLogAsyncTask().execute(path,filterEditText.getText().toString().trim(),priorityHM.get(prioritySpinner.getSelectedItem().toString()), isLoadFileChange);
 
     }

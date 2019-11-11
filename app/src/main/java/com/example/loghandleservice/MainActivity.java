@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -13,6 +14,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -48,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
             //If the draw over permission is not available open the settings screen
             //to grant the permission.
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+//                    Manifest.permission.READ_EXTERNAL_STORAGE
                     Uri.parse("package:" + getPackageName()));
 
             startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
@@ -56,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
             FloatingLogViewService.setHtmlParserAdapter(htmlIParser);
             FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
-            floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/19-09-2019.html");
+            floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/04-11-2019.html");
 
         }
     }
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d("ZINGLOGSHOW", "path "+ Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
         button = findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 String tag = "TEST";
                 String message = "test"+counter;
                 try {
-                    FileWriter writer = new FileWriter("/storage/emulated/0/Download/19-09-2019.html", true);
+                    FileWriter writer = new FileWriter("/storage/emulated/0/Download/04-11-2019.html", true);
                     writer.append("<p priority=\"").append(String.valueOf(2))
                             .append("\" style=\"background:lightgray;\"><strong ").append("style=\"background:lightblue;\">&nbsp&nbsp")
                             .append(logTimeStamp)

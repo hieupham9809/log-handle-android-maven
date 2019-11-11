@@ -8,7 +8,7 @@ public class LogConstant {
     public static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
     public static final int MIN_WIDTH_SIZE = 400;
     public static final int MIN_HEIGHT_SIZE = 500;
-    public static final int BUFFER_SIZE = 10000;
+    public static final int BUFFER_SIZE = 20;
 
 
 }
