@@ -68,7 +68,7 @@ public class ZingTVHtmlParser implements HtmlIParser {
 
 //                    Log.d("ZINGLOGSHOW", "read file " + " filter " + filterString);
 
-                    if (priority.equals(filterPriority) && matcher.group(7).contains(filterString)){
+                    if (priority.equals(filterPriority) && (matcher.group(7).contains(filterString) || matcher.group(5).contains(filterString))){
 
                         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
 

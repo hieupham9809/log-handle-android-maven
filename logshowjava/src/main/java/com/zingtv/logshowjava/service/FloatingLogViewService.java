@@ -95,7 +95,8 @@ public class FloatingLogViewService extends Service {
     private int old_x = 0;
     private int old_y = 0;
 
-    private int sum = 0;
+    private int previousNumTag = 0;
+    private String previousTag = "";
 
     private FileObserver fileObserver;
     private String content = "";
@@ -136,6 +137,7 @@ public class FloatingLogViewService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         if (intent != null && intent.getExtras() != null) {
             path = intent.getStringExtra("path");
 
@@ -145,27 +147,30 @@ public class FloatingLogViewService extends Service {
         fileName = pathArray[pathArray.length - 1];
         String parentDic = TextUtils.join("/", Arrays.copyOfRange(pathArray, 0, pathArray.length - 1)) + "/";
 
-        fileObserver = new FileObserver(parentDic) {
-            @Override
-            public void onEvent(int event, String path) {
+        if (fileObserver == null) {
+            fileObserver = new FileObserver(parentDic) {
+                @Override
+                public void onEvent(int event, String path) {
 
-                if (path == null || !path.equals(fileName)) {
-                    return;
-                }
+                    if (path == null || !path.equals(fileName)) {
+                        return;
+                    }
 
-                if (event == FileObserver.MODIFY) {
+                    if (event == FileObserver.MODIFY) {
 
-                    if (!isViewCollapsed() && recyclerView != null) {
+                        if (!isViewCollapsed() && recyclerView != null) {
 //                        loadWebViewHandler.post(loadWebViewRunnable);
-                        loadLogToWindow("true");
-                        Log.d("ZINGLOGSHOW", "File changed, load again");
+                            loadLogToWindow("true");
+                            Log.d("ZINGLOGSHOW", "File changed, load again");
 
+                        }
                     }
                 }
-            }
-        };
-        fileObserver.startWatching();
-        isWatching = true;
+            };
+            fileObserver.startWatching();
+            isWatching = true;
+        }
+
         return START_STICKY;
     }
 
@@ -516,9 +521,22 @@ public class FloatingLogViewService extends Service {
                     }
                     listPTag = new String(buffer).split("</p>");
                     Log.d("ZINGLOGSHOW", "listPTag size "+ listPTag.length);
+                    if (listPTag.length > previousNumTag){
+                        previousNumTag = listPTag.length;
+
+                    } else {
+                        if (!previousTag.equals(value[1])) {
+                            previousTag = value[1];
+                            Log.d("ZINGLOGSHOW", "first time repeat");
+                        } else {
+                            Log.d("ZINGLOGSHOW", "repeat");
+
+                            return null;
+                        }
+                    }
 
                     currentFileIndex = listPTag.length;
-                    Log.d("ZINGLOGSHOW", "reset currentFileIndex = " + currentFileIndex);
+//                    Log.d("ZINGLOGSHOW", "reset currentFileIndex = " + currentFileIndex);
 
                 }
 //                if (currentFileIndex == -1){
@@ -552,8 +570,8 @@ public class FloatingLogViewService extends Service {
                     throw new Exception("Need to implement and set HTML Parser");
                 }
 //                logTextView.setText(spannedContent);
-                sum+=spannedList.size();
-                Log.d("ZINGLOGSHOW", "number tag filtered " + sum);
+//                sum+=spannedList.size();
+//                Log.d("ZINGLOGSHOW", "number tag filtered " + sum);
 
                 return spannedList;
 
