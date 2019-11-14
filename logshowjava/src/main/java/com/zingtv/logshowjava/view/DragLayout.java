@@ -5,6 +5,8 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +43,9 @@ public class DragLayout extends RelativeLayout {
 
     private int currentScroll = 0;
 
+    DisplayMetrics metrics;
+    int screenWidth;
+
     private ViewDragHelper mDragHelper;
 
     ScaleWindowListener listener;
@@ -66,9 +71,9 @@ public class DragLayout extends RelativeLayout {
 //        scrollView = findViewById(R.id.scroll_view);
 //        tvWrapper = findViewById(R.id.tv_wrapper);
         modeTv = findViewById(R.id.priority_tv);
-//        logItemTv = findViewById(R.id.log_item_tv);
-//        tv = findViewById(R.id.tv);
-//        tv.setTextIsSelectable(true);
+        metrics = context.getResources().getDisplayMetrics();
+        screenWidth = metrics.widthPixels;
+
 
 
 
@@ -151,7 +156,7 @@ public class DragLayout extends RelativeLayout {
             if (ev.getAction() == MotionEvent.ACTION_MOVE) {
 
                 if (listener != null) {
-                    listener.OnScale((int) (ev.getRawX() - x_previous), (int) (ev.getRawY() - y_previous));
+                    listener.OnScale((int) ((scaleZone.getRight() + ev.getRawX() - x_previous < screenWidth) ? (ev.getRawX() - x_previous) : 0), (int) (ev.getRawY() - y_previous));
 
                 }
                 x_previous = ev.getRawX();

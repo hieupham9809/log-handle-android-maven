@@ -95,9 +95,9 @@
                     android:focusableInTouchMode="true" />
                 <TextView
                     android:id="@+id/priority_tv"
-                    android:layout_width="50dp"
+                    android:layout_width="60dp"
                     android:textSize="15sp"
-                    android:text="demo"
+                    android:text="Verbose"
                     android:gravity="bottom"
                     android:layout_height="match_parent"
                     android:adjustViewBounds="true"

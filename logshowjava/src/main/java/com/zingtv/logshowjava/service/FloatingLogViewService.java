@@ -594,70 +594,8 @@ public class FloatingLogViewService extends Service {
         }
     }
     public void loadLogToWindow(String isLoadFileChange) {
-//        Log.i("FLoatingLogView", Thread.currentThread().toString());
         new LoadLogAsyncTask().execute(path,filterEditText.getText().toString().trim(),priorityHM.get(prioritySpinner.getSelectedItem().toString()), isLoadFileChange);
 
-    }
-
-    private synchronized Spanned filterLog(String rawLog, String filterString, String priority) {
-        Spannable outputSpanned;
-        String content = rawLog;
-
-        String[] splitLog = content.split("</p>");
-        StringBuilder logAfterFilter = new StringBuilder();
-
-        // find all p tags that contain filterString
-        if (filterString.length() > 0) {
-
-            for (int i = 0; i < splitLog.length; i++) {
-                if (splitLog[i].contains(priority)
-                        && splitLog[i].contains(filterString)) {
-                    logAfterFilter.append(splitLog[i]).append("</p>");
-                }
-            }
-
-
-        } else {
-
-            for (int i = 0; i < splitLog.length; i++) {
-                if (splitLog[i].contains(priority)) {
-                    logAfterFilter.append(splitLog[i]).append("</p>");
-                }
-            }
-        }
-        content = logAfterFilter.toString();
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-//            Spanned spanned = Html.fromHtml(content, Html.FROM_HTML_MODE_LEGACY);
-            SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(content);
-            outputSpanned = new SpannableString(spannableStringBuilder);
-
-        } else {
-            outputSpanned = new SpannableString(Html.fromHtml(content));
-        }
-
-        // highlights all filterString
-
-        if (filterString.length() > 0) {
-            BackgroundColorSpan[] spans = outputSpanned.getSpans(0,
-                    outputSpanned.length(),
-                    BackgroundColorSpan.class);
-            for (BackgroundColorSpan span : spans) {
-                outputSpanned.removeSpan(span);
-            }
-
-            int index = TextUtils.indexOf(outputSpanned, filterString);
-
-
-            while (index >= 0) {
-
-                outputSpanned.setSpan(new BackgroundColorSpan(Color.parseColor("#9dd6f9")), index, index
-                        + filterString.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                index = TextUtils.indexOf(outputSpanned, filterString, index + filterString.length());
-            }
-        }
-
-        return outputSpanned;
     }
 
     private boolean isViewCollapsed() {
