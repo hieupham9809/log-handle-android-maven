@@ -75,6 +75,7 @@ public class FloatingLogViewService extends Service {
     private RecyclerView recyclerView;
     private LogItemAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
+    private EndlessRecyclerViewScrollListener endlessRecyclerViewScrollListener;
 
     private Context mContext;
 
@@ -224,14 +225,15 @@ public class FloatingLogViewService extends Service {
         recyclerView.setLayoutManager(layoutManager);
         mAdapter = new LogItemAdapter(this);
         recyclerView.setAdapter(mAdapter);
-        recyclerView.addOnScrollListener(new EndlessRecyclerViewScrollListener((LinearLayoutManager) layoutManager) {
+        endlessRecyclerViewScrollListener = new EndlessRecyclerViewScrollListener((LinearLayoutManager) layoutManager) {
             @Override
             public void onLoadMore() {
                 loadLogToWindow("false");
                 Log.d("ZINGLOGSHOW", "onLoadMore");
 
             }
-        });
+        };
+        recyclerView.addOnScrollListener(endlessRecyclerViewScrollListener);
 
 
         filterEditText = mFloatingView.findViewById(R.id.search_et);
@@ -530,6 +532,9 @@ public class FloatingLogViewService extends Service {
                             Log.d("ZINGLOGSHOW", "first time repeat");
                         } else {
                             Log.d("ZINGLOGSHOW", "repeat");
+                            currentFileIndex = previousNumTag;
+
+                            endlessRecyclerViewScrollListener.setLoading(false);
 
                             return null;
                         }
@@ -544,6 +549,8 @@ public class FloatingLogViewService extends Service {
 //
 //                }
                 if (htmlParser != null) {
+                    Log.d("ZINGLOGSHOW", "current file index " + currentFileIndex);
+
                     while (currentFileIndex > 0 && spannedList.size() == 0)
                     {
                         if (currentFileIndex - BUFFER_SIZE < 0) {
@@ -571,7 +578,8 @@ public class FloatingLogViewService extends Service {
                 }
 //                logTextView.setText(spannedContent);
 //                sum+=spannedList.size();
-//                Log.d("ZINGLOGSHOW", "number tag filtered " + sum);
+                Log.d("ZINGLOGSHOW", "spannedList length " + spannedList.size());
+
 
                 return spannedList;
 
