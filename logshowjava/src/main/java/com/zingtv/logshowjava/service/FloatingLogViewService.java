@@ -26,6 +26,7 @@ import android.text.style.BackgroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -63,7 +64,8 @@ import static com.zingtv.logshowjava.logconstant.LogConstant.MIN_WIDTH_SIZE;
 public class FloatingLogViewService extends Service {
     private WindowManager mWindowManager;
     private View mFloatingView;
-
+    private View collapsedView;
+    private DragLayout expandedView;
     private HashMap<String, String> priorityHM;
 
 
@@ -103,6 +105,7 @@ public class FloatingLogViewService extends Service {
     private String content = "";
     private String[] listPTag;
 
+    int screenWidth;
 
     private boolean isWatching = true;
     private boolean isMoving = false;
@@ -174,6 +177,7 @@ public class FloatingLogViewService extends Service {
 
         return START_STICKY;
     }
+
 
     @Override
     public void onCreate() {
@@ -297,7 +301,7 @@ public class FloatingLogViewService extends Service {
         });
 
         DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-        final int screenWidth = metrics.widthPixels;
+        screenWidth = metrics.widthPixels;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             TYPE_FLAG = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -308,7 +312,11 @@ public class FloatingLogViewService extends Service {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 TYPE_FLAG,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                ,
                 PixelFormat.TRANSLUCENT);
 
 
@@ -324,10 +332,10 @@ public class FloatingLogViewService extends Service {
 
 
         //The root element of the collapsed view layout
-        final View collapsedView = mFloatingView.findViewById(R.id.collapse_view);
+        collapsedView = mFloatingView.findViewById(R.id.collapse_view);
         collapsedView.setVisibility(View.VISIBLE);
         //The root element of the expanded view layout
-        final DragLayout expandedView = mFloatingView.findViewById(R.id.drag_layout);
+        expandedView = mFloatingView.findViewById(R.id.drag_layout);
         expandedView.setVisibility(View.GONE);
 
 
@@ -366,19 +374,7 @@ public class FloatingLogViewService extends Service {
         closeButtonDrag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                params.width = WindowManager.LayoutParams.WRAP_CONTENT;
-                params.height = WindowManager.LayoutParams.WRAP_CONTENT;
-                old_x = params.x;
-                old_y = params.y;
-                if (params.x > screenWidth / 2) {
-                    params.x = screenWidth - collapsedView.getWidth() / 2;
-                } else {
-                    params.x = 0;
-                }
-                collapsedView.setVisibility(View.VISIBLE);
-                expandedView.setVisibility(View.GONE);
-                mWindowManager.updateViewLayout(mFloatingView, params);
-
+                closeExpandViewAction();
             }
         });
         //Drag and move floating view using user's touch action.
@@ -440,12 +436,13 @@ public class FloatingLogViewService extends Service {
                                 //and expanded view will become visible.
                                 collapsedView.setVisibility(View.GONE);
                                 expandedView.setVisibility(View.VISIBLE);
-
-//                                logTextView = mFloatingView.findViewById(R.id.tv);
-//                                logTextView.setTextColor(Color.WHITE);
-//                                scrollView = mFloatingView.findViewById(R.id.scroll_view);
-//                                tvWrapper = mFloatingView.findViewById(R.id.tv_wrapper);
-
+//                                expandedView.setFocusable(true);
+                                expandedView.setKeyBackListener(new DragLayout.KeyBackListener() {
+                                    @Override
+                                    public void OnKeyBack() {
+                                        closeExpandViewAction();
+                                    }
+                                });
 
 
 //                                if (mAdapter.getItemCount() == 0) {
@@ -464,6 +461,9 @@ public class FloatingLogViewService extends Service {
                                     params.y = old_y;
                                 }
 //
+                                params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL ;
                                 mWindowManager.updateViewLayout(mFloatingView, params);
 
                             }
@@ -509,7 +509,7 @@ public class FloatingLogViewService extends Service {
             List<Spanned> spannedList = new ArrayList<>();
 
             try {
-                Log.i("FLoatingLogView", "doInBackground: " + Thread.currentThread().toString());
+//                Log.i("FLoatingLogView", "doInBackground: " + Thread.currentThread().toString());
                 if (value[3].equals("true")) {
                     Log.d("ZINGLOGSHOW", "load file again");
 
@@ -618,6 +618,25 @@ public class FloatingLogViewService extends Service {
 
 
         }
+    }
+    private void closeExpandViewAction(){
+        params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        old_x = params.x;
+        old_y = params.y;
+        if (params.x > screenWidth / 2) {
+            params.x = screenWidth - collapsedView.getWidth() / 2;
+        } else {
+            params.x = 0;
+        }
+        collapsedView.setVisibility(View.VISIBLE);
+        expandedView.setVisibility(View.GONE);
+
+        params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        mWindowManager.updateViewLayout(mFloatingView, params);
     }
     public void loadLogToWindow(String isLoadFileChange) {
         new LoadLogAsyncTask().execute(path,filterEditText.getText().toString().trim(),priorityHM.get(prioritySpinner.getSelectedItem().toString()), isLoadFileChange);

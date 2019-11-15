@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,7 +49,9 @@ public class DragLayout extends RelativeLayout {
 
     private ViewDragHelper mDragHelper;
 
-    ScaleWindowListener listener;
+    ScaleWindowListener scalelistener;
+    KeyBackListener keyBackListener;
+
 
     public DragLayout(Context context) {
         super(context);
@@ -128,17 +131,28 @@ public class DragLayout extends RelativeLayout {
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent event)
+    {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+        {
+            if (event.getAction() == KeyEvent.ACTION_UP) {
+                if (keyBackListener != null){
+                    keyBackListener.OnKeyBack();
+                }
+//                this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+                Log.d("ZINGLOGSHOW", "back key touched");
+                return false;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+    @Override
     public boolean onTouchEvent(MotionEvent ev) {
 
 
         if (isViewHit(scaleZone, (int) ev.getX(), (int) ev.getY())) {
 
             isScaling = true;
-//            if (scrollView.getScrollY() != 0) {
-//                currentScroll = scrollView.getScrollY();
-//            }
-
-//            tvWrapper.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
 
         }
 
@@ -155,8 +169,8 @@ public class DragLayout extends RelativeLayout {
             }
             if (ev.getAction() == MotionEvent.ACTION_MOVE) {
 
-                if (listener != null) {
-                    listener.OnScale((int) ((scaleZone.getRight() + ev.getRawX() - x_previous < screenWidth) ? (ev.getRawX() - x_previous) : 0), (int) (ev.getRawY() - y_previous));
+                if (scalelistener != null) {
+                    scalelistener.OnScale((int) ((scaleZone.getRight() + ev.getRawX() - x_previous < screenWidth) ? (ev.getRawX() - x_previous) : 0), (int) (ev.getRawY() - y_previous));
 
                 }
                 x_previous = ev.getRawX();
@@ -263,7 +277,14 @@ public class DragLayout extends RelativeLayout {
         void OnScale(int dx, int dy);
     }
 
+    public interface KeyBackListener {
+        void OnKeyBack();
+    }
+
+    public void setKeyBackListener (KeyBackListener listener){
+        this.keyBackListener = listener;
+    }
     public void setScaleWindowListener(ScaleWindowListener listener) {
-        this.listener = listener;
+        this.scalelistener = listener;
     }
 }

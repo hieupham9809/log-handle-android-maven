@@ -99,13 +99,13 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
         // the visibleThreshold and need to reload more data.
         // If we do need to reload some more data, we execute onLoadMore to fetch the data.
         // threshold should reflect how many total columns there are too
-        Log.d("ZINGLOGSHOW", "firstVisibleItem: "+ firstVisibleItem + " "
-                                        +"totalItemCount: "+ totalItemCount + " "
-                                        +"visibleItemCount: "+ visibleItemCount + " "
-                                        +"previousItemCount: "+ previousTotalItemCount + " "
-                                        +"loading: "+ loading + " "
-
-        );
+//        Log.d("ZINGLOGSHOW", "firstVisibleItem: "+ firstVisibleItem + " "
+//                                        +"totalItemCount: "+ totalItemCount + " "
+//                                        +"visibleItemCount: "+ visibleItemCount + " "
+//                                        +"previousItemCount: "+ previousTotalItemCount + " "
+//                                        +"loading: "+ loading + " "
+//
+//        );
 
         if (!loading && (firstVisibleItem - visibleItemCount) <= 0) {
 //            Log.d("ZingDemoApi", "lastVisibleItemPosition: " + lastVisibleItemPosition);
