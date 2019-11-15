@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 
 
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -30,6 +31,7 @@ public class DragLayout extends RelativeLayout {
     private RecyclerView recyclerView;
     private View scaleZone;
 
+    private ProgressBar progressBar;
     private Context context;
     private int dx = 0;
     private int dy = 0;
@@ -71,6 +73,7 @@ public class DragLayout extends RelativeLayout {
         mainView = findViewById(R.id.main_view);
         scaleZone = findViewById(R.id.scale_zone);
         recyclerView = findViewById(R.id.recyclerview_log);
+        progressBar = findViewById(R.id.progress_bar);
 //        scrollView = findViewById(R.id.scroll_view);
 //        tvWrapper = findViewById(R.id.tv_wrapper);
         modeTv = findViewById(R.id.priority_tv);
@@ -130,22 +133,7 @@ public class DragLayout extends RelativeLayout {
                 && screenY < viewLocation[1] + view.getHeight();
     }
 
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event)
-    {
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK)
-        {
-            if (event.getAction() == KeyEvent.ACTION_UP) {
-                if (keyBackListener != null){
-                    keyBackListener.OnKeyBack();
-                }
-//                this.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
-                Log.d("ZINGLOGSHOW", "back key touched");
-                return false;
-            }
-        }
-        return super.dispatchKeyEvent(event);
-    }
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 
@@ -265,6 +253,12 @@ public class DragLayout extends RelativeLayout {
                 bottom
         );
 
+        progressBar.layout(
+                mainView.getLeft(),
+                mainView.getBottom(),
+                right,
+                mainView.getBottom() + 20
+        );
         scaleZone.layout(
                 right - 100,
                 top,

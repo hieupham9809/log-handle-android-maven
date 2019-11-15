@@ -37,6 +37,7 @@ import android.widget.ImageButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -69,12 +70,13 @@ public class FloatingLogViewService extends Service {
     private HashMap<String, String> priorityHM;
 
 
-//    private LinearLayout tvWrapper;
+    //    private LinearLayout tvWrapper;
 //    private TextView logTextView;
     private TextView priorityTextView;
 //    private ScrollView scrollView;
 
     private RecyclerView recyclerView;
+    private ProgressBar progressBar;
     private LogItemAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private EndlessRecyclerViewScrollListener endlessRecyclerViewScrollListener;
@@ -99,7 +101,8 @@ public class FloatingLogViewService extends Service {
     private int old_y = 0;
 
     private int previousNumTag = 0;
-    private String previousTag = "";
+    private String previousFilter = "";
+    private String previousPriority = "";
 
     private FileObserver fileObserver;
     private String content = "";
@@ -115,7 +118,7 @@ public class FloatingLogViewService extends Service {
 
     private final long DELAY_FILTER = 1000;
 
-    private int currentFileIndex = -1;
+    private int currentFileIndex = 0;
 
     public FloatingLogViewService() {
     }
@@ -202,6 +205,22 @@ public class FloatingLogViewService extends Service {
         //Inflate the floating view layout we created
 
         mFloatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating_log_widget, null);
+        mFloatingView.setFocusableInTouchMode(true);
+        mFloatingView.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    if (event.getAction() == KeyEvent.ACTION_UP) {
+                        closeExpandViewAction();
+
+                        Log.d("ZINGLOGSHOW", "back key touched");
+                        return true;
+                    }
+
+                }
+                return false;
+            }
+        });
         priorityTextView = mFloatingView.findViewById(R.id.priority_tv);
         prioritySpinner = mFloatingView.findViewById(R.id.priority_spinner);
         arrayAdapterSpinner = new CustomArrayAdapter(getBaseContext(), android.R.layout.simple_list_item_1, priorityHM.keySet().toArray(new String[6]));
@@ -222,6 +241,7 @@ public class FloatingLogViewService extends Service {
         prioritySpinner.setSelection(arrayAdapterSpinner.getPosition("Verbose"));
         priorityTextView.setText(prioritySpinner.getSelectedItem().toString());
 
+        progressBar = mFloatingView.findViewById(R.id.progress_bar);
         recyclerView = mFloatingView.findViewById(R.id.recyclerview_log);
         // use a linear layout manager
         layoutManager = new LinearLayoutManager(mContext);
@@ -437,16 +457,16 @@ public class FloatingLogViewService extends Service {
                                 collapsedView.setVisibility(View.GONE);
                                 expandedView.setVisibility(View.VISIBLE);
 //                                expandedView.setFocusable(true);
-                                expandedView.setKeyBackListener(new DragLayout.KeyBackListener() {
-                                    @Override
-                                    public void OnKeyBack() {
-                                        closeExpandViewAction();
-                                    }
-                                });
+//                                expandedView.setKeyBackListener(new DragLayout.KeyBackListener() {
+//                                    @Override
+//                                    public void OnKeyBack() {
+//                                        closeExpandViewAction();
+//                                    }
+//                                });
 
 
 //                                if (mAdapter.getItemCount() == 0) {
-                                    loadLogToWindow("true");
+                                loadLogToWindow("true");
 //                                }
 
                                 if (old_height == 0 || old_width == 0) {
@@ -463,7 +483,7 @@ public class FloatingLogViewService extends Service {
 //
                                 params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
-                                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL ;
+                                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
                                 mWindowManager.updateViewLayout(mFloatingView, params);
 
                             }
@@ -494,12 +514,17 @@ public class FloatingLogViewService extends Service {
 
         @Override
         protected void onPreExecute() {
+            if (progressBar.getVisibility() != View.VISIBLE) {
+//                progressBar.setProgress(0);
+                progressBar.setVisibility(View.VISIBLE);
+
+            }
             super.onPreExecute();
         }
 
         @Override
         protected List<Spanned> doInBackground(String... value) {
-            if (value[3].equals("true")){ // load new file and not for scrolling, reset currentFileIndex to 0
+            if (value[3].equals("true")) { // load new file and not for scrolling, reset currentFileIndex to 0
                 currentFileIndex = 0;
                 isScrollToEnd = true;
             }
@@ -507,6 +532,7 @@ public class FloatingLogViewService extends Service {
 //            String content = "";
 //            Spanned spannedContent;
             List<Spanned> spannedList = new ArrayList<>();
+
 
             try {
 //                Log.i("FLoatingLogView", "doInBackground: " + Thread.currentThread().toString());
@@ -522,16 +548,16 @@ public class FloatingLogViewService extends Service {
 
                     }
                     listPTag = new String(buffer).split("</p>");
-                    Log.d("ZINGLOGSHOW", "listPTag size "+ listPTag.length);
-                    if (listPTag.length > previousNumTag){
+                    if (listPTag.length > previousNumTag) {
                         previousNumTag = listPTag.length;
 
                     } else {
-                        if (!previousTag.equals(value[1])) {
-                            previousTag = value[1];
+                        if (!previousFilter.equals(value[1]) || !previousPriority.equals(value[2])) {
+                            previousFilter = value[1];
+                            previousPriority = value[2];
                             Log.d("ZINGLOGSHOW", "first time repeat");
                         } else {
-                            Log.d("ZINGLOGSHOW", "repeat");
+                            Log.d("ZINGLOGSHOW", "repeat list, not update UI");
                             currentFileIndex = previousNumTag;
 
                             endlessRecyclerViewScrollListener.setLoading(false);
@@ -544,29 +570,39 @@ public class FloatingLogViewService extends Service {
 //                    Log.d("ZINGLOGSHOW", "reset currentFileIndex = " + currentFileIndex);
 
                 }
-//                if (currentFileIndex == -1){
-//
-//
-//                }
+
+                int progress = 2;
+                int sum = currentFileIndex;
+
                 if (htmlParser != null) {
                     Log.d("ZINGLOGSHOW", "current file index " + currentFileIndex);
 
-                    while (currentFileIndex > 0 && spannedList.size() == 0)
-                    {
+                    while (currentFileIndex > 0 && spannedList.size() == 0) {
                         if (currentFileIndex - BUFFER_SIZE < 0) {
-//                            spannedList = htmlParser.read(content.substring(0, currentFileIndex), value[1], value[2]);
                             spannedList = htmlParser.read(TextUtils.join("</p>", Arrays.copyOfRange(listPTag, 0, currentFileIndex)), value[1], value[2]);
-                            currentFileIndex = -1;
+                            currentFileIndex = 0;
                             Log.d("ZINGLOGSHOW", "reach top of file");
 
                         } else {
-//                            spannedList = htmlParser.read(content.substring(currentFileIndex - BUFFER_SIZE, currentFileIndex), value[1], value[2]);
                             spannedList = htmlParser.read(TextUtils.join("</p>", Arrays.copyOfRange(listPTag, currentFileIndex - BUFFER_SIZE, currentFileIndex)), value[1], value[2]);
                             currentFileIndex -= BUFFER_SIZE;
                             Log.d("ZINGLOGSHOW", "load more");
 
                         }
 
+                        progress = (int) ((sum - currentFileIndex) * 1f / sum * 100);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            progressBar.setProgress(progress, true);
+                        } else {
+                            progressBar.setProgress(progress);
+                        }
+                        Log.d("ZINGLOGSHOW", "progress " + progress);
+
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        progressBar.setProgress(100, true);
+                    } else {
+                        progressBar.setProgress(100);
                     }
 //                    spannedContent = filterLog(content, value[1],value[2]);
 //                    filterEditText.getText().toString().trim()
@@ -584,8 +620,6 @@ public class FloatingLogViewService extends Service {
                 return spannedList;
 
 
-
-
             } catch (Exception e) {
                 Log.d("ZINGLOGSHOW", "error reading file " + e.getMessage());
                 return null;
@@ -594,14 +628,17 @@ public class FloatingLogViewService extends Service {
         }
 
         @Override
-        protected void onPostExecute(List<Spanned> result){
+        protected void onPostExecute(List<Spanned> result) {
 //            Log.d("FLoatingLogView", "notify" );
 //            logTextView.setText(result);
             // specify an adapter (see also next example)
 
-
+            progressBar.setVisibility(View.INVISIBLE);
             if (result != null) {
+
                 if (isScrollToEnd) {
+                    mAdapter.clear();
+
                     mAdapter.setLog(result);
                     mAdapter.notifyDataSetChanged();
 
@@ -619,7 +656,8 @@ public class FloatingLogViewService extends Service {
 
         }
     }
-    private void closeExpandViewAction(){
+
+    private void closeExpandViewAction() {
         params.width = WindowManager.LayoutParams.WRAP_CONTENT;
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
         old_x = params.x;
@@ -638,8 +676,9 @@ public class FloatingLogViewService extends Service {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         mWindowManager.updateViewLayout(mFloatingView, params);
     }
+
     public void loadLogToWindow(String isLoadFileChange) {
-        new LoadLogAsyncTask().execute(path,filterEditText.getText().toString().trim(),priorityHM.get(prioritySpinner.getSelectedItem().toString()), isLoadFileChange);
+        new LoadLogAsyncTask().execute(path, filterEditText.getText().toString().trim(), priorityHM.get(prioritySpinner.getSelectedItem().toString()), isLoadFileChange);
 
     }
 

@@ -42,6 +42,13 @@ public class LogItemAdapter extends RecyclerView.Adapter<LogItemAdapter.LogViewH
         mContext = context;
 
     }
+    public void clear(){
+        if (mDataset != null) {
+            int size = mDataset.size();
+            mDataset.clear();
+            notifyItemRangeRemoved(0, size);
+        }
+    }
     public void setLog(List<Spanned> spannedList){
         mDataset = spannedList;
     }

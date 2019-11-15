@@ -127,30 +127,6 @@
 
                 ></ImageView>
 
-
-            <!--<ScrollView-->
-                <!--android:id="@+id/scroll_view"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:background="#000000"-->
-
-                <!--&gt;-->
-                <!--<LinearLayout-->
-                    <!--android:id="@+id/tv_wrapper"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:orientation="vertical"-->
-                    <!--android:descendantFocusability="blocksDescendants"-->
-                    <!--&gt;-->
-                    <!--<TextView-->
-                        <!--android:id="@+id/tv"-->
-                        <!--android:layout_width="wrap_content"-->
-                        <!--android:layout_height="wrap_content"-->
-                        <!--android:focusableInTouchMode="true"-->
-                        <!--/>-->
-                <!--</LinearLayout>-->
-
-            <!--</ScrollView>-->
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerview_log"
                 android:layout_width="match_parent"
@@ -160,6 +136,15 @@
 
             </android.support.v7.widget.RecyclerView>
 
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                android:progress="0"
+                >
+            </ProgressBar>
             <!--<WebView-->
                 <!--android:id="@+id/webview"-->
                 <!--android:layout_width="200dp"-->
