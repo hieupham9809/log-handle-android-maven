@@ -103,16 +103,7 @@
                     android:adjustViewBounds="true"
                     android:paddingBottom="5dp"
                     />
-                <Spinner
-                    android:id="@+id/priority_spinner"
-                    android:layout_width="30dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="bottom"
-                    android:spinnerMode="dropdown"
-                    android:focusable="true"
-                    android:scaleType="fitCenter"
-                    >
-                </Spinner>
+
 
 
             </LinearLayout>
@@ -127,14 +118,14 @@
 
                 ></ImageView>
 
-            <android.support.v7.widget.RecyclerView
+            <com.zingtv.logshowjava.view.SlowRecyclerView
                 android:id="@+id/recyclerview_log"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scrollbars="vertical"
                 android:background="#000000">
 
-            </android.support.v7.widget.RecyclerView>
+            </com.zingtv.logshowjava.view.SlowRecyclerView>
 
             <ProgressBar
                 android:id="@+id/progress_bar"

@@ -1,45 +1,40 @@
 package com.zingtv.logshowjava.service;
 
+import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.Service;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.FileObserver;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
-import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 
-import android.text.style.BackgroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import android.widget.ImageButton;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.zingtv.logshowjava.R;
@@ -48,11 +43,11 @@ import com.zingtv.logshowjava.parser.HtmlIParser;
 import com.zingtv.logshowjava.view.DragLayout;
 import com.zingtv.logshowjava.view.EndlessRecyclerViewScrollListener;
 import com.zingtv.logshowjava.view.LogItemAdapter;
+import com.zingtv.logshowjava.view.SlowRecyclerView;
 
 import java.io.File;
 import java.io.FileInputStream;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -70,12 +65,12 @@ public class FloatingLogViewService extends Service {
     private HashMap<String, String> priorityHM;
 
 
-    //    private LinearLayout tvWrapper;
-//    private TextView logTextView;
-    private TextView priorityTextView;
-//    private ScrollView scrollView;
 
-    private RecyclerView recyclerView;
+    private TextView priorityTextView;
+    private PopupMenu popupMenu;
+
+
+    private SlowRecyclerView recyclerView;
     private ProgressBar progressBar;
     private LogItemAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
@@ -84,8 +79,6 @@ public class FloatingLogViewService extends Service {
     private Context mContext;
 
     private EditText filterEditText;
-    private Spinner prioritySpinner;
-    private CustomArrayAdapter arrayAdapterSpinner;
 
     private ImageButton loadBtn;
     private Handler loadWebViewHandler;
@@ -121,18 +114,32 @@ public class FloatingLogViewService extends Service {
     private int currentFileIndex = 0;
 
     public FloatingLogViewService() {
+
     }
 
-    public int startSelf(Context context, String path) {
-
+    public void startSelf(Context context, String path) {
         Intent intent = new Intent(context, FloatingLogViewService.class);
         /* Send path, for example: /storage/emulated/0/Android/data/com.example.logshowjava/files/Documents/showlog/30-09-2019.html */
         intent.putExtra("path", path);
         mContext = context;
-        context.startService(intent);
-        return 0;
+
+        if (!isMyServiceRunning()) {
+            mContext.startService(intent);
+        } else {
+            Log.d("ZINGLOGSHOW","service's already started, do nothing.");
+        }
+
     }
 
+    private boolean isMyServiceRunning() {
+        ActivityManager manager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (FloatingLogViewService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
     public static void setHtmlParserAdapter(HtmlIParser newHtmlParser) {
         htmlParser = newHtmlParser;
     }
@@ -149,6 +156,7 @@ public class FloatingLogViewService extends Service {
             path = intent.getStringExtra("path");
 
         }
+
 
         String[] pathArray = path.split("/");
         fileName = pathArray[pathArray.length - 1];
@@ -184,7 +192,7 @@ public class FloatingLogViewService extends Service {
 
     @Override
     public void onCreate() {
-
+        mContext = getApplicationContext();
         loadWebViewHandler = new Handler();
         loadWebViewRunnable = new Runnable() {
             @Override
@@ -202,9 +210,26 @@ public class FloatingLogViewService extends Service {
         priorityHM.put("Error", "6");
         priorityHM.put("Assert", "7");
 
-        //Inflate the floating view layout we created
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        screenWidth = metrics.widthPixels;
 
+        //Inflate the floating view layout we created
         mFloatingView = LayoutInflater.from(this).inflate(R.layout.layout_floating_log_widget, null);
+
+        priorityTextView = mFloatingView.findViewById(R.id.priority_tv);
+        progressBar = mFloatingView.findViewById(R.id.progress_bar);
+        recyclerView = mFloatingView.findViewById(R.id.recyclerview_log);
+        filterEditText = mFloatingView.findViewById(R.id.search_et);
+        loadBtn = mFloatingView.findViewById(R.id.load_btn);
+
+        //The root element of the collapsed view layout
+        collapsedView = mFloatingView.findViewById(R.id.collapse_view);
+        //The root element of the expanded view layout
+        expandedView = mFloatingView.findViewById(R.id.drag_layout);
+
+        ImageView closeButtonCollapsed = (ImageView) mFloatingView.findViewById(R.id.close_btn);
+        ImageView closeButtonDrag = (ImageView) mFloatingView.findViewById(R.id.close_button_at_drag);
+
         mFloatingView.setFocusableInTouchMode(true);
         mFloatingView.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -213,7 +238,7 @@ public class FloatingLogViewService extends Service {
                     if (event.getAction() == KeyEvent.ACTION_UP) {
                         closeExpandViewAction();
 
-                        Log.d("ZINGLOGSHOW", "back key touched");
+//                        Log.d("ZINGLOGSHOW", "back key touched");
                         return true;
                     }
 
@@ -221,28 +246,17 @@ public class FloatingLogViewService extends Service {
                 return false;
             }
         });
-        priorityTextView = mFloatingView.findViewById(R.id.priority_tv);
-        prioritySpinner = mFloatingView.findViewById(R.id.priority_spinner);
-        arrayAdapterSpinner = new CustomArrayAdapter(getBaseContext(), android.R.layout.simple_list_item_1, priorityHM.keySet().toArray(new String[6]));
 
-        arrayAdapterSpinner.setOnSelectItemListener(new CustomArrayAdapter.OnSelectItemListener() {
+        createPopupMenu();
+
+        priorityTextView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onSelected(String priority) {
-                hideSpinnerDropDown(prioritySpinner);
-                prioritySpinner.setSelection(arrayAdapterSpinner.getPosition(priority));
-
-                loadLogToWindow("true");
-                priorityTextView.setText(prioritySpinner.getSelectedItem().toString());
+            public void onClick(View v) {
+                popupMenu.show();
             }
         });
 
 
-        prioritySpinner.setAdapter(arrayAdapterSpinner);
-        prioritySpinner.setSelection(arrayAdapterSpinner.getPosition("Verbose"));
-        priorityTextView.setText(prioritySpinner.getSelectedItem().toString());
-
-        progressBar = mFloatingView.findViewById(R.id.progress_bar);
-        recyclerView = mFloatingView.findViewById(R.id.recyclerview_log);
         // use a linear layout manager
         layoutManager = new LinearLayoutManager(mContext);
         ((LinearLayoutManager) layoutManager).setStackFromEnd(true);
@@ -253,14 +267,12 @@ public class FloatingLogViewService extends Service {
             @Override
             public void onLoadMore() {
                 loadLogToWindow("false");
-                Log.d("ZINGLOGSHOW", "onLoadMore");
 
             }
         };
         recyclerView.addOnScrollListener(endlessRecyclerViewScrollListener);
 
 
-        filterEditText = mFloatingView.findViewById(R.id.search_et);
 
         filterEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -280,7 +292,6 @@ public class FloatingLogViewService extends Service {
                 loadWebViewHandler.postDelayed(loadWebViewRunnable, DELAY_FILTER);
             }
         });
-        loadBtn = mFloatingView.findViewById(R.id.load_btn);
 
         if (isWatching) {
             loadBtn.setImageResource(R.drawable.media_stop);
@@ -320,8 +331,7 @@ public class FloatingLogViewService extends Service {
             }
         });
 
-        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-        screenWidth = metrics.widthPixels;
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             TYPE_FLAG = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -348,14 +358,10 @@ public class FloatingLogViewService extends Service {
 
         //Add the view to the window
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        mWindowManager.addView(mFloatingView, params);
 
 
-        //The root element of the collapsed view layout
-        collapsedView = mFloatingView.findViewById(R.id.collapse_view);
+
         collapsedView.setVisibility(View.VISIBLE);
-        //The root element of the expanded view layout
-        expandedView = mFloatingView.findViewById(R.id.drag_layout);
         expandedView.setVisibility(View.GONE);
 
 
@@ -380,8 +386,7 @@ public class FloatingLogViewService extends Service {
         });
 
 
-        //Set the close ImageButton
-        ImageView closeButtonCollapsed = (ImageView) mFloatingView.findViewById(R.id.close_btn);
+        //Set the close service
         closeButtonCollapsed.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -389,8 +394,7 @@ public class FloatingLogViewService extends Service {
                 stopSelf();
             }
         });
-        //Set the close button
-        ImageView closeButtonDrag = (ImageView) mFloatingView.findViewById(R.id.close_button_at_drag);
+        //Set the close expand view
         closeButtonDrag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -456,18 +460,8 @@ public class FloatingLogViewService extends Service {
                                 //and expanded view will become visible.
                                 collapsedView.setVisibility(View.GONE);
                                 expandedView.setVisibility(View.VISIBLE);
-//                                expandedView.setFocusable(true);
-//                                expandedView.setKeyBackListener(new DragLayout.KeyBackListener() {
-//                                    @Override
-//                                    public void OnKeyBack() {
-//                                        closeExpandViewAction();
-//                                    }
-//                                });
 
-
-//                                if (mAdapter.getItemCount() == 0) {
                                 loadLogToWindow("true");
-//                                }
 
                                 if (old_height == 0 || old_width == 0) {
                                     params.width = 600;
@@ -480,7 +474,7 @@ public class FloatingLogViewService extends Service {
                                     params.x = old_x;
                                     params.y = old_y;
                                 }
-//
+
                                 params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH |
                                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
@@ -496,30 +490,33 @@ public class FloatingLogViewService extends Service {
             }
         });
 
-    }
 
-
-    public void hideSpinnerDropDown(Spinner spinner) {
-        try {
-            Method method = Spinner.class.getDeclaredMethod("onDetachedFromWindow");
-            method.setAccessible(true);
-            method.invoke(spinner);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(this)) {
+                mWindowManager.addView(mFloatingView, params);
+            }
+        } else {
+            mWindowManager.addView(mFloatingView, params);
         }
+
+
+
     }
 
-    class LoadLogAsyncTask extends AsyncTask<String, Integer, List<Spanned>> {
+     @SuppressLint("StaticFieldLeak")
+     class LoadLogAsyncTask extends AsyncTask<String, Integer, List<Spanned>> {
         boolean isScrollToEnd = false;
 
         @Override
         protected void onPreExecute() {
-            if (progressBar.getVisibility() != View.VISIBLE) {
-//                progressBar.setProgress(0);
-                progressBar.setVisibility(View.VISIBLE);
 
-            }
             super.onPreExecute();
+
+            //                if (progressBar.getVisibility() != View.VISIBLE) {
+////                progressBar.setProgress(0);
+//                    progressBar.setVisibility(View.VISIBLE);
+//
+//                }
         }
 
         @Override
@@ -529,13 +526,12 @@ public class FloatingLogViewService extends Service {
                 isScrollToEnd = true;
             }
             FileInputStream fis;
-//            String content = "";
-//            Spanned spannedContent;
+
             List<Spanned> spannedList = new ArrayList<>();
 
 
             try {
-//                Log.i("FLoatingLogView", "doInBackground: " + Thread.currentThread().toString());
+
                 if (value[3].equals("true")) {
                     Log.d("ZINGLOGSHOW", "load file again");
 
@@ -567,15 +563,13 @@ public class FloatingLogViewService extends Service {
                     }
 
                     currentFileIndex = listPTag.length;
-//                    Log.d("ZINGLOGSHOW", "reset currentFileIndex = " + currentFileIndex);
 
                 }
 
-                int progress = 2;
+                int progress;
                 int sum = currentFileIndex;
 
                 if (htmlParser != null) {
-                    Log.d("ZINGLOGSHOW", "current file index " + currentFileIndex);
 
                     while (currentFileIndex > 0 && spannedList.size() == 0) {
                         if (currentFileIndex - BUFFER_SIZE < 0) {
@@ -591,30 +585,19 @@ public class FloatingLogViewService extends Service {
                         }
 
                         progress = (int) ((sum - currentFileIndex) * 1f / sum * 100);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            progressBar.setProgress(progress, true);
-                        } else {
-                            progressBar.setProgress(progress);
-                        }
-                        Log.d("ZINGLOGSHOW", "progress " + progress);
+
+                        publishProgress(progress);
 
                     }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        progressBar.setProgress(100, true);
-                    } else {
-                        progressBar.setProgress(100);
-                    }
-//                    spannedContent = filterLog(content, value[1],value[2]);
-//                    filterEditText.getText().toString().trim()
-//                    priorityHM.get(prioritySpinner.getSelectedItem().toString())
+
+                    publishProgress(100);
                 } else {
                     Log.d("ZINGLOGSHOW", "html Parser null");
 
                     throw new Exception("Need to implement and set HTML Parser");
                 }
-//                logTextView.setText(spannedContent);
-//                sum+=spannedList.size();
-                Log.d("ZINGLOGSHOW", "spannedList length " + spannedList.size());
+
+//                Log.d("ZINGLOGSHOW", "spannedList length " + spannedList.size());
 
 
                 return spannedList;
@@ -628,10 +611,19 @@ public class FloatingLogViewService extends Service {
         }
 
         @Override
+        protected void onProgressUpdate(Integer... values){
+            super.onProgressUpdate();
+            if (progressBar.getVisibility() == View.INVISIBLE) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                progressBar.setProgress(values[0], true);
+            } else {
+                progressBar.setProgress(values[0]);
+            }
+        }
+        @Override
         protected void onPostExecute(List<Spanned> result) {
-//            Log.d("FLoatingLogView", "notify" );
-//            logTextView.setText(result);
-            // specify an adapter (see also next example)
 
             progressBar.setVisibility(View.INVISIBLE);
             if (result != null) {
@@ -644,10 +636,7 @@ public class FloatingLogViewService extends Service {
 
                     recyclerView.scrollToPosition(result.size() - 1);
                 } else {
-//                    Log.d("ZINGLOGSHOW", "result length " + result.size());
-//                if (result.size() == 0 && currentFileIndex - BUFFER_SIZE < 0){
-//                    loadLogToWindow("false");
-//                }
+
                     mAdapter.insertLog(result);
                     mAdapter.notifyItemRangeInserted(0, result.size());
                 }
@@ -657,6 +646,27 @@ public class FloatingLogViewService extends Service {
         }
     }
 
+    private void createPopupMenu(){
+        popupMenu = new PopupMenu(mContext, priorityTextView);
+
+        popupMenu.getMenuInflater()
+                .inflate(R.menu.popup_menu, popupMenu.getMenu());
+        popupMenu.getMenu().add("Verbose");
+        popupMenu.getMenu().add("Debug");
+        popupMenu.getMenu().add("Info");
+        popupMenu.getMenu().add("Warn");
+        popupMenu.getMenu().add("Error");
+        popupMenu.getMenu().add("Assert");
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                priorityTextView.setText(item.getTitle());
+                loadLogToWindow("true");
+
+                return true;
+            }
+        });
+    }
     private void closeExpandViewAction() {
         params.width = WindowManager.LayoutParams.WRAP_CONTENT;
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -678,7 +688,8 @@ public class FloatingLogViewService extends Service {
     }
 
     public void loadLogToWindow(String isLoadFileChange) {
-        new LoadLogAsyncTask().execute(path, filterEditText.getText().toString().trim(), priorityHM.get(prioritySpinner.getSelectedItem().toString()), isLoadFileChange);
+
+        new LoadLogAsyncTask().execute(path, filterEditText.getText().toString().trim(), priorityHM.get(priorityTextView.getText().toString()), isLoadFileChange);
 
     }
 

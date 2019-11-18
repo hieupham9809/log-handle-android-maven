@@ -28,7 +28,7 @@ public class DragLayout extends RelativeLayout {
 //    private TextView logItemTv;
     private TextView modeTv;
 //    private ScrollView scrollView;
-    private RecyclerView recyclerView;
+    private SlowRecyclerView recyclerView;
     private View scaleZone;
 
     private ProgressBar progressBar;

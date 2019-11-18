@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -37,6 +40,7 @@ import static com.zingtv.logshowjava.logconstant.LogConstant.REQUEST_CODE_WRITE_
 
 public class MainActivity extends AppCompatActivity {
     Button button;
+    Button startBtn;
     int counter = 0;
 
     String[] appPermissions = {
@@ -49,19 +53,43 @@ public class MainActivity extends AppCompatActivity {
 
             //If the draw over permission is not available open the settings screen
             //to grant the permission.
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-//                    Manifest.permission.READ_EXTERNAL_STORAGE
-                    Uri.parse("package:" + getPackageName()));
+            showDialog2(""
+                    , "this module needs DRAW_OVER_APP_PERMISSION to work"
+                    , "Yes, grant"
+                    , new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName()));
 
-            startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
+                            startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
+                        }
+                    },
+                    "No",
+                    new DialogInterface.OnClickListener(){
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i){
+                            dialogInterface.dismiss();
+
+                        }
+                    }, false);
+
         } else {
             HtmlIParser htmlIParser = new ZingTVHtmlParser();
 
             FloatingLogViewService.setHtmlParserAdapter(htmlIParser);
+
             FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
             floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/04-11-2019.html");
 
+
         }
+//        HtmlIParser htmlIParser = new ZingTVHtmlParser();
+//
+//        FloatingLogViewService.setHtmlParserAdapter(htmlIParser);
+//        FloatingLogViewService floatingLogViewService = new FloatingLogViewService(this);
+//        floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/04-11-2019.html");
     }
 
     boolean checkAndRequestPermissions() {
@@ -105,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("ZINGLOGSHOW", "path "+ Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
         button = findViewById(R.id.button);
+        startBtn = findViewById(R.id.startBtn);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -133,43 +162,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (checkAndRequestPermissions()) {
-            initApp();
-        }
-//        if (isExternalStorageAvailable()) {
-//
-//            // Check whether this app has write external storage permission or not.
-//            int writeExternalStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-//            // If do not grant write external storage permission.
-//            if (writeExternalStoragePermission != PackageManager.PERMISSION_GRANTED) {
-//
-//                // Request user to grant write external storage permission.
-//                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_WRITE_EXTERNAL_STORAGE_PERMISSION);
-//            } else {
-////                Log.d("ZINGLOGSHOW", "HERE");
-//
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-//
-//
-//                    //If the draw over permission is not available open the settings screen
-//                    //to grant the permission.
-//                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-//                            Uri.parse("package:" + getPackageName()));
-//
-//                    startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
-//                } else {
-//
-//                    FloatingLogViewService.setHtmlParserAdapter(new ZingTVHtmlParser());
-//                    FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
-//                    floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/19-09-2019.html");
-//
-//
-//
-////                    handler.postDelayed(runnable, 2000);
-//
-//                }
-//            }
-//        }
+        startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (checkAndRequestPermissions()) {
+                    Log.d("ZINGLOGSHOW", "init app");
+                    initApp();
+                }
+            }
+        });
+
+
 
     }
 
@@ -177,19 +180,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CODE_DRAW_OVER_OTHER_APP_PERMISSION) {
             initApp();
-//
-//            //Check if the permission is granted or not.
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-//                FloatingLogViewService.setHtmlParserAdapter(new ZingTVHtmlParser());
-//                FloatingLogViewService floatingLogViewService = new FloatingLogViewService();
-//                floatingLogViewService.startSelf(this, "/storage/emulated/0/Download/19-09-2019.html");
-//            } else { //Permission is not available
-//                Toast.makeText(this,
-//                        "Draw over other app permission not available. Closing the application",
-//                        Toast.LENGTH_SHORT).show();
-//
-//                finish();
-//            }
+
         }
         else {
             super.onActivityResult(requestCode, resultCode, data);
